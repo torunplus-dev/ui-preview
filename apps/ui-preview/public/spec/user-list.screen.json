@@ -1,0 +1,31 @@
+{
+  "id": "user-list",
+  "title": "User List",
+  "type": "dataScreen",
+  "api": {
+    "list": "/api/users",
+    "create": "/api/users",
+    "delete": "/api/users/:id"
+  },
+  "table": {
+    "rowKey": "id",
+    "columns": [
+      { "key": "name", "title": "Name", "dataIndex": "name" },
+      { "key": "email", "title": "Email", "dataIndex": "email" },
+      { "key": "role", "title": "Role", "dataIndex": "role" }
+    ]
+  },
+  "search": { "placeholder": "Search user by name" },
+  "createForm": {
+    "title": "Create User",
+    "fields": [
+      { "name": "name", "label": "Name", "component": "input", "required": true },
+      { "name": "email", "label": "Email", "component": "input", "required": true },
+      { "name": "role", "label": "Role", "component": "select", "required": true }
+    ]
+  },
+  "actions": [
+    { "type": "openModal", "label": "Create User", "roleRequired": ["admin", "user"] },
+    { "type": "delete", "label": "Delete User", "roleRequired": ["admin"] }
+  ]
+}
