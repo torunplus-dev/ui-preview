@@ -34,15 +34,28 @@ function AppInner() {
 
   const openScreen = async (node: TreeNodeItem) => {
     if (!node.screenSpecPath) return;
-    const exists = tabs.find((t) => t.key === node.id);
-    if (exists) {
-      setActiveKey(exists.key);
+
+    setActiveKey((current) => {
+      if (tabs.some((t) => t.key === node.id)) {
+        return node.id;
+      }
+      return current;
+    });
+
+    if (tabs.some((t) => t.key === node.id)) {
       return;
     }
+
     const spec = await loadSpecFromPublic(node.screenSpecPath);
     pushLog({ type: 'ui', message: `open screen ${spec.id}` });
-    const next = [...tabs, { key: node.id, title: node.title, spec }];
-    setTabs(next);
+
+    setTabs((prev) => {
+      if (prev.some((t) => t.key === node.id)) {
+        return prev;
+      }
+      return [...prev, { key: node.id, title: node.title, spec }];
+    });
+
     setActiveKey(node.id);
   };
 
