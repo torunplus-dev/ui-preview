@@ -7,7 +7,10 @@ let users: User[] = [
   { id: 'u-2', name: 'Bob Smith', email: 'bob@example.com', role: 'user' }
 ];
 
-function createScenarioResponse(mode: string, success: () => HttpResponse | Promise<HttpResponse>) {
+function createScenarioResponse(
+  mode: string,
+  success: () => Response | Promise<Response>
+) {
   if (mode === 'timeout') {
     return new Promise<never>(() => {});
   }

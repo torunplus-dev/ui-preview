@@ -8,6 +8,11 @@ type Props = {
   onOpenScreen: (node: TreeNodeItem) => void;
 };
 
+type NavTreeNode = DataNode & {
+  screenSpecPath?: string;
+  children?: NavTreeNode[];
+};
+
 function toDataNodes(nodes: TreeNodeItem[]): DataNode[] {
   return nodes.map((node) => ({
     key: node.id,
@@ -18,13 +23,13 @@ function toDataNodes(nodes: TreeNodeItem[]): DataNode[] {
 }
 
 export function NavTree({ onOpenScreen }: Props) {
-  const [treeData, setTreeData] = useState<DataNode[]>([]);
+  const [treeData, setTreeData] = useState<NavTreeNode[]>([]);
 
   useEffect(() => {
     apiFetch<TreeNodeItem[]>('/api/tree').then((nodes) => setTreeData(toDataNodes(nodes)));
   }, []);
 
-  const onLoadData = async (node: DataNode): Promise<void> => {
+  const onLoadData = async (node: NavTreeNode): Promise<void> => {
     const children = await apiFetch<TreeNodeItem[]>(`/api/tree?parentId=${node.key}`);
     node.children = toDataNodes(children);
     setTreeData([...treeData]);
@@ -35,7 +40,7 @@ export function NavTree({ onOpenScreen }: Props) {
       treeData={treeData}
       loadData={onLoadData}
       onSelect={(_, info) => {
-        const n = info.node as DataNode & TreeNodeItem;
+        const n = info.node as NavTreeNode;
         if (n.isLeaf && n.screenSpecPath) {
           onOpenScreen({
             id: String(n.key),
