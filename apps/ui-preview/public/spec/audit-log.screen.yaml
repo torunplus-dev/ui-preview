@@ -1,0 +1,39 @@
+id: audit-log
+title: Audit Log
+type: dataScreen
+api:
+  list: /api/audits
+  create: /api/audits
+  delete: /api/audits/:id
+table:
+  rowKey: id
+  columns:
+    - key: actor
+      title: Actor
+      dataIndex: actor
+    - key: event
+      title: Event
+      dataIndex: event
+    - key: at
+      title: Timestamp
+      dataIndex: at
+search:
+  placeholder: Search audit logs
+createForm:
+  title: Create Mock Audit
+  fields:
+    - name: actor
+      label: Actor
+      component: input
+      required: true
+    - name: event
+      label: Event
+      component: input
+      required: true
+actions:
+  - type: openModal
+    label: Add Audit
+    roleRequired: [admin]
+  - type: delete
+    label: Delete Audit
+    roleRequired: [admin]

@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "moduleResolution": "Bundler",
+    "allowImportingTsExtensions": false,
+    "resolveJsonModule": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@ui-preview/ui-spec": ["../../packages/ui-spec/src"],
+      "@ui-preview/ui-components": ["../../packages/ui-components/src"],
+      "@ui-preview/ui-renderer": ["../../packages/ui-renderer/src"],
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src", "../../packages/*/src"]
+}
