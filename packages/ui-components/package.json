@@ -6,10 +6,10 @@
   "main": "src/index.tsx",
   "dependencies": {
     "@ui-preview/ui-spec": "workspace:*",
-    "antd": "^5.25.0",
-    "react": "^18.3.1"
+    "antd": "latest",
+    "react": "latest"
   },
   "devDependencies": {
-    "@types/react": "^18.3.18"
+    "@types/react": "latest"
   }
 }

@@ -6,6 +6,6 @@
   "main": "src/index.ts",
   "dependencies": {
     "@ui-preview/ui-spec": "workspace:*",
-    "yaml": "^2.5.0"
+    "yaml": "latest"
   }
 }

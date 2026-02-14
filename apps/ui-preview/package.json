@@ -14,20 +14,20 @@
     "@ui-preview/ui-components": "workspace:*",
     "@ui-preview/ui-renderer": "workspace:*",
     "@ui-preview/ui-spec": "workspace:*",
-    "antd": "^5.25.0",
-    "msw": "^2.10.5",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "yaml": "^2.5.0",
-    "zod": "^3.23.8"
+    "antd": "latest",
+    "msw": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "yaml": "latest",
+    "zod": "latest"
   },
   "devDependencies": {
-    "@types/node": "^22.10.2",
-    "@types/react": "^18.3.18",
-    "@types/react-dom": "^18.3.5",
-    "@vitejs/plugin-react": "^4.3.4",
-    "typescript": "^5.7.2",
-    "vite": "^6.0.3"
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "@vitejs/plugin-react": "latest",
+    "typescript": "latest",
+    "vite": "latest"
   },
   "msw": {
     "workerDirectory": [
