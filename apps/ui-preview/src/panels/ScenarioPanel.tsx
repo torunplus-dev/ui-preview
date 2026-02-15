@@ -16,6 +16,7 @@ export function ScenarioPanel() {
   const { scenarios, setScenarios } = useAppState();
   return (
     <Card size="small" title="Scenario Control">
+      {/* setScenarios には関数を渡し、前回状態(prev)を基準に安全に更新する。 */}
       <Space direction="vertical" style={{ width: '100%' }}>
         <PanelSection title="GET /api/users">
           <Select

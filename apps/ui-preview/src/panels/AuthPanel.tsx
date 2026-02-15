@@ -6,6 +6,7 @@ export function AuthPanel() {
   const { role, setRole } = useAppState();
   return (
     <Card size="small" title="Auth Role">
+      {/* 現在ロールの可視化。state が変わると自動再描画される。 */}
       <div style={{ marginBottom: 8 }}>
         <RoleBadge role={role} />
       </div>

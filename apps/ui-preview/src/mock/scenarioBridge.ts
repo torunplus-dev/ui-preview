@@ -1,5 +1,6 @@
 import type { Role, ScenarioState } from '@/types';
 
+// Reactの外(MSWハンドラー側)から参照するための共有メモリ。
 let currentScenarios: ScenarioState = {
   GET_USERS: 'success',
   POST_USER: 'success',

@@ -1,5 +1,6 @@
 import type { Role, ScreenSpec } from '@ui-preview/ui-spec';
 
+// ドメイン型は ui-spec から再エクスポートし、import窓口をこのファイルに寄せる。
 export type { Role, ScreenSpec };
 
 export type TreeNodeItem = {

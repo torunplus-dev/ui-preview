@@ -2,6 +2,7 @@ import { delay, http, HttpResponse } from 'msw';
 import { getMockRole, getScenarioState } from './scenarioBridge';
 import type { User } from '@/types';
 
+// モックDBの代わりとなるインメモリ配列。
 let users: User[] = [
   { id: 'u-1', name: 'Alice Johnson', email: 'alice@example.com', role: 'admin' },
   { id: 'u-2', name: 'Bob Smith', email: 'bob@example.com', role: 'user' }
@@ -11,6 +12,7 @@ function createScenarioResponse(
   mode: string,
   success: () => Response | Promise<Response>
 ) {
+  // UIから選んだシナリオに応じて応答を差し替える。
   if (mode === 'timeout') {
     return new Promise<never>(() => {});
   }
@@ -30,6 +32,7 @@ function createScenarioResponse(
 }
 
 export const handlers = [
+  // ナビツリー用エンドポイント。
   http.get('/api/tree', async ({ request }) => {
     const parentId = new URL(request.url).searchParams.get('parentId');
     if (!parentId) {
@@ -54,6 +57,7 @@ export const handlers = [
     const { POST_USER } = getScenarioState();
     const role = getMockRole();
     return createScenarioResponse(POST_USER, async () => {
+      // 疑似認可: guest は作成不可。
       if (role === 'guest') {
         return HttpResponse.json({ message: 'Guests cannot create users' }, { status: 403 });
       }
