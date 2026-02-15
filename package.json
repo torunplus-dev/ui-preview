@@ -3,9 +3,9 @@
   "private": true,
   "version": "0.1.0",
   "engines": {
-    "node": "22.x"
+    "node": "24.x"
   },
-  "packageManager": "pnpm@9.12.0",
+  "packageManager": "pnpm@10.18.3",
   "scripts": {
     "dev": "pnpm --filter ui-preview dev",
     "build": "pnpm --filter ui-preview build && rm -rf dist && cp -R apps/ui-preview/dist dist",
