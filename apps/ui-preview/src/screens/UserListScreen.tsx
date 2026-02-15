@@ -6,6 +6,8 @@ import { apiFetch } from '@/services/apiClient';
 import { useAppState } from '@/contexts/AppContext';
 
 export function UserListScreen({ spec }: { spec: ScreenSpec }) {
+  // このコンポーネントは状態とイベントを持つため、Next.jsでは `use client` 側に置く。
+  // 一方で一覧データ取得だけを Server Component に分離する構成もよく使う。
   const { role, pushLog } = useAppState();
   const [rows, setRows] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
@@ -13,12 +15,16 @@ export function UserListScreen({ spec }: { spec: ScreenSpec }) {
   const [searchText, setSearchText] = useState('');
   const [form] = Form.useForm();
 
+  // 権限に応じたUI制御。認可そのものはサーバー側でも必須。
   const canCreate = role !== 'guest';
   const canDelete = role === 'admin';
 
   const loadData = async () => {
     setLoading(true);
     try {
+      // Next.js に移行した場合:
+      // - クライアントから叩く: `/api/users` (Route Handler)
+      // - サーバーで先読み: Server Component から直接 fetch
       const data = await apiFetch<{ users: User[] }>(spec.api.list);
       setRows(data.users);
     } catch (e) {
@@ -28,15 +34,19 @@ export function UserListScreen({ spec }: { spec: ScreenSpec }) {
     }
   };
 
+  // specで指定されたAPIが変わったら再取得。
+  // Next.js なら Server Component で fetch して渡す設計も可能。
   useEffect(() => {
     void loadData();
   }, [spec.api.list]);
 
+  // 検索文字列や元データが変わった時だけ再計算。
   const filtered = useMemo(
     () => rows.filter((u) => u.name.toLowerCase().includes(searchText.toLowerCase())),
     [rows, searchText]
   );
 
+  // テーブル定義を spec + UIロジックで組み立てる。
   const columns: ColumnsType<User> = [
     ...spec.table.columns.map((col) => ({ title: col.title, dataIndex: col.dataIndex, key: col.key })),
     {
@@ -81,6 +91,7 @@ export function UserListScreen({ spec }: { spec: ScreenSpec }) {
         open={isModalOpen}
         onCancel={() => setModalOpen(false)}
         onOk={async () => {
+          // Form.Item の rules に沿ってバリデーション後、送信値を得る。
           const values = await form.validateFields();
           pushLog({ type: 'ui', message: 'create submit', payload: values });
           await apiFetch(spec.api.create, { method: 'POST', body: JSON.stringify(values) });
@@ -91,6 +102,7 @@ export function UserListScreen({ spec }: { spec: ScreenSpec }) {
         }}
       >
         <Form form={form} layout="vertical">
+          {/* フォーム定義も spec から生成して、画面実装の重複を減らす */}
           {spec.createForm.fields.map((field) => (
             <Form.Item key={field.name} name={field.name} label={field.label} rules={[{ required: field.required }]}>
               {field.component === 'select' ? (

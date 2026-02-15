@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+// zod schema は「バリデーション」と「TypeScript型推論」を同時に満たせる。
 export const actionSchema = z.object({
   type: z.enum(['openModal', 'delete', 'submit', 'refresh']),
   label: z.string(),
@@ -46,5 +47,6 @@ export type ScreenSpec = z.infer<typeof screenSpecSchema>;
 export type Role = 'admin' | 'user' | 'guest';
 
 export function validateScreenSpec(input: unknown): ScreenSpec {
+  // parse は不正データ時に例外を投げる(= fail fast)。
   return screenSpecSchema.parse(input);
 }

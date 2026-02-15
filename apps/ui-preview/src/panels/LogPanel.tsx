@@ -18,6 +18,7 @@ export function LogPanel() {
         size="small"
         dataSource={logs}
         locale={{ emptyText: 'No logs yet' }}
+        // renderItem は「1件分の見た目」を関数で定義するパターン。
         renderItem={(item) => (
           <List.Item>
             <List.Item.Meta
