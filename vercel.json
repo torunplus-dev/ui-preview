@@ -1,6 +1,6 @@
 {
   "framework": "vite",
   "buildCommand": "pnpm build",
-  "installCommand": "corepack enable && corepack prepare pnpm@9.12.0 --activate && node -v && pnpm -v && pnpm install --frozen-lockfile",
-  "outputDirectory": "apps/ui-preview/dist"
+  "installCommand": "corepack enable && corepack prepare pnpm@10.18.3 --activate && node -v && pnpm -v && pnpm install --frozen-lockfile",
+  "outputDirectory": "dist"
 }
