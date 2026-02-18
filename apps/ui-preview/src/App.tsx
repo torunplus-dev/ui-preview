@@ -1,4 +1,4 @@
-import { Layout, Tabs, Typography } from 'antd';
+import { Layout, Menu, Tabs, Typography } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import { loadSpecFromPublic } from '@ui-preview/ui-renderer';
 import { NavTree } from '@/components/NavTree';
@@ -15,15 +15,62 @@ const { Header, Sider, Content } = Layout;
 
 type OpenTab = { key: string; title: string; spec: ScreenSpec };
 
+const topMenuItems = [
+  { key: 'preview', label: 'Preview' },
+  { key: 'scenarios', label: 'Scenarios' },
+  { key: 'logs', label: 'Logs' }
+];
+
 // 実際の画面本体。AppProvider で囲まれた内側で Context を使う。
 // Next.js App Router へ移すなら、このファイル相当は基本 `use client` が必要
 // (useState/useEffect/イベントハンドラを使っているため)。
 function AppInner() {
+  const MIN_SIDER_WIDTH = 220;
+  const MAX_SIDER_WIDTH = 560;
+
   // tabs: 開いている画面の一覧
   // activeKey: 今表示しているタブID
   const [tabs, setTabs] = useState<OpenTab[]>([]);
   const [activeKey, setActiveKey] = useState<string>();
+  const [leftSiderWidth, setLeftSiderWidth] = useState(260);
+  const [rightSiderWidth, setRightSiderWidth] = useState(360);
+  const [resizingSide, setResizingSide] = useState<'left' | 'right' | null>(null);
   const { scenarios, role, pushLog } = useAppState();
+
+  useEffect(() => {
+    if (!resizingSide) return;
+
+    const handlePointerMove = (event: PointerEvent) => {
+      const maxWidth = Math.min(MAX_SIDER_WIDTH, window.innerWidth - MIN_SIDER_WIDTH);
+      if (resizingSide === 'left') {
+        const next = Math.min(Math.max(event.clientX, MIN_SIDER_WIDTH), maxWidth);
+        setLeftSiderWidth(next);
+      } else {
+        const next = Math.min(Math.max(window.innerWidth - event.clientX, MIN_SIDER_WIDTH), maxWidth);
+        setRightSiderWidth(next);
+      }
+    };
+
+    const stopResize = () => {
+      setResizingSide(null);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', stopResize);
+    window.addEventListener('pointercancel', stopResize);
+
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', stopResize);
+      window.removeEventListener('pointercancel', stopResize);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [resizingSide]);
 
   // UI上で変えたシナリオ設定を MSW 側の参照状態へ反映。
   useEffect(() => {
@@ -75,11 +122,21 @@ function AppInner() {
       <Header style={{ color: '#fff' }}>
         <Typography.Text style={{ color: '#fff', fontSize: 18 }}>UI Preview (Spec + MSW)</Typography.Text>
       </Header>
-      <Layout>
-        <Sider width={260} theme="light" style={{ borderRight: '1px solid #eee', padding: 12 }}>
+      <div style={{ background: '#fff', borderBottom: '1px solid #eee', padding: '0 12px' }}>
+        <Menu mode="horizontal" selectedKeys={['preview']} items={topMenuItems} style={{ borderBottom: 'none' }} />
+      </div>
+      <Layout style={{ minHeight: 0, flex: 1 }}>
+        <Sider width={leftSiderWidth} theme="light" style={{ borderRight: '1px solid #eee', padding: 12 }}>
           <Typography.Title level={5}>Navigation</Typography.Title>
           <NavTree onOpenScreen={openScreen} />
         </Sider>
+        <div
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Resize navigation pane"
+          onPointerDown={() => setResizingSide('left')}
+          style={{ width: 8, cursor: 'col-resize', background: '#f5f5f5', borderRight: '1px solid #eee' }}
+        />
         <Content style={{ padding: 16 }}>
           <Tabs
             type="editable-card"
@@ -99,7 +156,18 @@ function AppInner() {
             }}
           />
         </Content>
-        <Sider width={360} theme="light" style={{ borderLeft: '1px solid #eee', padding: 12, overflow: 'auto' }}>
+        <div
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Resize settings pane"
+          onPointerDown={() => setResizingSide('right')}
+          style={{ width: 8, cursor: 'col-resize', background: '#f5f5f5', borderLeft: '1px solid #eee' }}
+        />
+        <Sider
+          width={rightSiderWidth}
+          theme="light"
+          style={{ borderLeft: '1px solid #eee', padding: 12, overflow: 'auto' }}
+        >
           <div style={{ display: 'grid', gap: 12 }}>
             <AuthPanel />
             <ScenarioPanel />
