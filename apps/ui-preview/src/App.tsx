@@ -19,11 +19,50 @@ type OpenTab = { key: string; title: string; spec: ScreenSpec };
 // Next.js App Router へ移すなら、このファイル相当は基本 `use client` が必要
 // (useState/useEffect/イベントハンドラを使っているため)。
 function AppInner() {
+  const MIN_SIDER_WIDTH = 220;
+  const MAX_SIDER_WIDTH = 560;
+
   // tabs: 開いている画面の一覧
   // activeKey: 今表示しているタブID
   const [tabs, setTabs] = useState<OpenTab[]>([]);
   const [activeKey, setActiveKey] = useState<string>();
+  const [leftSiderWidth, setLeftSiderWidth] = useState(260);
+  const [rightSiderWidth, setRightSiderWidth] = useState(360);
+  const [resizingSide, setResizingSide] = useState<'left' | 'right' | null>(null);
   const { scenarios, role, pushLog } = useAppState();
+
+  useEffect(() => {
+    if (!resizingSide) return;
+
+    const handlePointerMove = (event: PointerEvent) => {
+      const maxWidth = Math.min(MAX_SIDER_WIDTH, window.innerWidth - MIN_SIDER_WIDTH);
+      if (resizingSide === 'left') {
+        const next = Math.min(Math.max(event.clientX, MIN_SIDER_WIDTH), maxWidth);
+        setLeftSiderWidth(next);
+      } else {
+        const next = Math.min(Math.max(window.innerWidth - event.clientX, MIN_SIDER_WIDTH), maxWidth);
+        setRightSiderWidth(next);
+      }
+    };
+
+    const stopResize = () => {
+      setResizingSide(null);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', stopResize);
+
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', stopResize);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [resizingSide]);
 
   // UI上で変えたシナリオ設定を MSW 側の参照状態へ反映。
   useEffect(() => {
@@ -76,10 +115,17 @@ function AppInner() {
         <Typography.Text style={{ color: '#fff', fontSize: 18 }}>UI Preview (Spec + MSW)</Typography.Text>
       </Header>
       <Layout>
-        <Sider width={260} theme="light" style={{ borderRight: '1px solid #eee', padding: 12 }}>
+        <Sider width={leftSiderWidth} theme="light" style={{ borderRight: '1px solid #eee', padding: 12 }}>
           <Typography.Title level={5}>Navigation</Typography.Title>
           <NavTree onOpenScreen={openScreen} />
         </Sider>
+        <div
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Resize navigation pane"
+          onPointerDown={() => setResizingSide('left')}
+          style={{ width: 8, cursor: 'col-resize', background: '#f5f5f5', borderRight: '1px solid #eee' }}
+        />
         <Content style={{ padding: 16 }}>
           <Tabs
             type="editable-card"
@@ -99,7 +145,18 @@ function AppInner() {
             }}
           />
         </Content>
-        <Sider width={360} theme="light" style={{ borderLeft: '1px solid #eee', padding: 12, overflow: 'auto' }}>
+        <div
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Resize settings pane"
+          onPointerDown={() => setResizingSide('right')}
+          style={{ width: 8, cursor: 'col-resize', background: '#f5f5f5', borderLeft: '1px solid #eee' }}
+        />
+        <Sider
+          width={rightSiderWidth}
+          theme="light"
+          style={{ borderLeft: '1px solid #eee', padding: 12, overflow: 'auto' }}
+        >
           <div style={{ display: 'grid', gap: 12 }}>
             <AuthPanel />
             <ScenarioPanel />
