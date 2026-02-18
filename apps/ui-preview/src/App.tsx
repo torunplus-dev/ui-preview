@@ -14,6 +14,7 @@ import type { ScreenSpec, TreeNodeItem } from '@/types';
 const { Header, Sider, Content } = Layout;
 
 type OpenTab = { key: string; title: string; spec: ScreenSpec };
+type LeftPaneMode = 'navigation' | 'auth' | 'scenario' | 'log';
 
 // 実際の画面本体。AppProvider で囲まれた内側で Context を使う。
 // Next.js App Router へ移すなら、このファイル相当は基本 `use client` が必要
@@ -21,6 +22,8 @@ type OpenTab = { key: string; title: string; spec: ScreenSpec };
 function AppInner() {
   const MIN_SIDER_WIDTH = 220;
   const MAX_SIDER_WIDTH = 560;
+  const ACTIVITY_BAR_WIDTH = 52;
+  const MIN_LEFT_CONTENT_WIDTH = 200;
 
   // tabs: 開いている画面の一覧
   // activeKey: 今表示しているタブID
@@ -29,15 +32,18 @@ function AppInner() {
   const [leftSiderWidth, setLeftSiderWidth] = useState(260);
   const [rightSiderWidth, setRightSiderWidth] = useState(360);
   const [resizingSide, setResizingSide] = useState<'left' | 'right' | null>(null);
+  const [leftPaneMode, setLeftPaneMode] = useState<LeftPaneMode>('navigation');
   const { scenarios, role, pushLog } = useAppState();
 
   useEffect(() => {
     if (!resizingSide) return;
 
     const handlePointerMove = (event: PointerEvent) => {
+      const minLeftWidth = ACTIVITY_BAR_WIDTH + MIN_LEFT_CONTENT_WIDTH;
       const maxWidth = Math.min(MAX_SIDER_WIDTH, window.innerWidth - MIN_SIDER_WIDTH);
+
       if (resizingSide === 'left') {
-        const next = Math.min(Math.max(event.clientX, MIN_SIDER_WIDTH), maxWidth);
+        const next = Math.min(Math.max(event.clientX, minLeftWidth), maxWidth);
         setLeftSiderWidth(next);
       } else {
         const next = Math.min(Math.max(window.innerWidth - event.clientX, MIN_SIDER_WIDTH), maxWidth);
@@ -109,16 +115,92 @@ function AppInner() {
     [tabs]
   );
 
+  const leftPaneMeta: Record<
+    LeftPaneMode,
+    {
+      icon: string;
+      title: string;
+      render: () => JSX.Element;
+    }
+  > = {
+    navigation: {
+      icon: '🧭',
+      title: 'Navigation',
+      render: () => <NavTree onOpenScreen={openScreen} />
+    },
+    auth: {
+      icon: '🔐',
+      title: 'Auth',
+      render: () => <AuthPanel />
+    },
+    scenario: {
+      icon: '🧪',
+      title: 'Scenario',
+      render: () => <ScenarioPanel />
+    },
+    log: {
+      icon: '📜',
+      title: 'Logs',
+      render: () => <LogPanel />
+    }
+  };
+
+  const activityItems: LeftPaneMode[] = ['navigation', 'auth', 'scenario', 'log'];
+  const activeLeftPane = leftPaneMeta[leftPaneMode];
+
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Header style={{ color: '#fff' }}>
         <Typography.Text style={{ color: '#fff', fontSize: 18 }}>UI Preview (Spec + MSW)</Typography.Text>
       </Header>
       <Layout>
-        <Sider width={leftSiderWidth} theme="light" style={{ borderRight: '1px solid #eee', padding: 12 }}>
-          <Typography.Title level={5}>Navigation</Typography.Title>
-          <NavTree onOpenScreen={openScreen} />
-        </Sider>
+        <div style={{ display: 'flex', width: leftSiderWidth, borderRight: '1px solid #eee', minWidth: 0 }}>
+          <div
+            style={{
+              width: ACTIVITY_BAR_WIDTH,
+              borderRight: '1px solid #eee',
+              background: '#fafafa',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 8,
+              padding: '12px 8px'
+            }}
+          >
+            {activityItems.map((mode) => {
+              const isActive = mode === leftPaneMode;
+              return (
+                <button
+                  key={mode}
+                  type="button"
+                  aria-label={`Switch to ${leftPaneMeta[mode].title}`}
+                  aria-pressed={isActive}
+                  onClick={() => setLeftPaneMode(mode)}
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 8,
+                    border: isActive ? '1px solid #1677ff' : '1px solid #d9d9d9',
+                    background: isActive ? '#e6f4ff' : '#fff',
+                    cursor: 'pointer',
+                    fontSize: 16,
+                    lineHeight: '36px'
+                  }}
+                >
+                  {leftPaneMeta[mode].icon}
+                </button>
+              );
+            })}
+          </div>
+          <Sider
+            width={Math.max(leftSiderWidth - ACTIVITY_BAR_WIDTH, MIN_LEFT_CONTENT_WIDTH)}
+            theme="light"
+            style={{ padding: 12, overflow: 'auto' }}
+          >
+            <Typography.Title level={5}>{activeLeftPane.title}</Typography.Title>
+            {activeLeftPane.render()}
+          </Sider>
+        </div>
         <div
           role="separator"
           aria-orientation="vertical"
