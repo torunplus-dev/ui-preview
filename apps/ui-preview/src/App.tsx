@@ -1,4 +1,4 @@
-import { Layout, Menu, Tabs, Typography } from 'antd';
+import { Layout, Menu, Table, Tabs, Tag, Typography } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import { loadSpecFromPublic } from '@ui-preview/ui-renderer';
 import { NavTree } from '@/components/NavTree';
@@ -21,6 +21,10 @@ const topMenuItems = [
 
 type OpenTab = { key: string; title: string; spec: ScreenSpec };
 
+type EditLogRow = { key: string; time: string; level: 'INFO' | 'WARN' | 'ERROR'; message: string };
+type EditRecordRow = { key: string; type: string; owner: string; updatedAt: string; status: '公開' | '下書き' | '保留' };
+type EditSettingRow = { key: string; category: string; item: string; value: string; note?: string };
+
 
 type LeftPaneMode = 'explorer' | 'search' | 'settings';
 
@@ -28,6 +32,24 @@ const leftModeItems: { key: LeftPaneMode; label: string; icon: string }[] = [
   { key: 'explorer', label: 'Explorer', icon: '📁' },
   { key: 'search', label: 'Search', icon: '🔎' },
   { key: 'settings', label: 'Settings', icon: '⚙️' }
+];
+
+const editLogRows: EditLogRow[] = [
+  { key: 'l1', time: '10:14:02', level: 'INFO', message: 'ユーザー一覧を取得しました。' },
+  { key: 'l2', time: '10:14:18', level: 'WARN', message: '設定ファイルに未使用フィールドがあります。' },
+  { key: 'l3', time: '10:15:07', level: 'ERROR', message: '更新リクエストがタイムアウトしました。' }
+];
+
+const editRecordRows: EditRecordRow[] = [
+  { key: 'r1', type: 'ログ', owner: 'Tanaka', updatedAt: '2026-02-19 10:02', status: '公開' },
+  { key: 'r2', type: 'レコード', owner: 'Sato', updatedAt: '2026-02-19 09:54', status: '保留' },
+  { key: 'r3', type: '設定', owner: 'Suzuki', updatedAt: '2026-02-19 09:40', status: '下書き' }
+];
+
+const editSettingRows: EditSettingRow[] = [
+  { key: 's1', category: 'API', item: 'baseURL', value: 'https://api.example.local', note: '開発環境' },
+  { key: 's2', category: '認証', item: 'token refresh', value: 'enabled' },
+  { key: 's3', category: '表示', item: 'page size', value: '50' }
 ];
 
 // 実際の画面本体。AppProvider で囲まれた内側で Context を使う。
@@ -125,6 +147,79 @@ function AppInner() {
     [tabs]
   );
 
+  const centerPaneItems = useMemo(
+    () => [
+      {
+        key: 'logs',
+        label: 'ログ',
+        children: (
+          <Table<EditLogRow>
+            size="small"
+            pagination={false}
+            dataSource={editLogRows}
+            columns={[
+              { title: '時刻', dataIndex: 'time', key: 'time', width: 120 },
+              {
+                title: 'レベル',
+                dataIndex: 'level',
+                key: 'level',
+                width: 110,
+                render: (level: EditLogRow['level']) => {
+                  const color = level === 'ERROR' ? 'red' : level === 'WARN' ? 'gold' : 'blue';
+                  return <Tag color={color}>{level}</Tag>;
+                }
+              },
+              { title: 'メッセージ', dataIndex: 'message', key: 'message' }
+            ]}
+          />
+        )
+      },
+      {
+        key: 'records',
+        label: 'レコード',
+        children: (
+          <Table<EditRecordRow>
+            size="small"
+            pagination={false}
+            dataSource={editRecordRows}
+            columns={[
+              { title: '種別', dataIndex: 'type', key: 'type', width: 120 },
+              { title: '担当', dataIndex: 'owner', key: 'owner', width: 140 },
+              { title: '更新日時', dataIndex: 'updatedAt', key: 'updatedAt', width: 190 },
+              {
+                title: '状態',
+                dataIndex: 'status',
+                key: 'status',
+                width: 120,
+                render: (status: EditRecordRow['status']) => (
+                  <Tag color={status === '公開' ? 'green' : status === '保留' ? 'orange' : 'default'}>{status}</Tag>
+                )
+              }
+            ]}
+          />
+        )
+      },
+      {
+        key: 'settings',
+        label: '設定一覧',
+        children: (
+          <Table<EditSettingRow>
+            size="small"
+            pagination={false}
+            dataSource={editSettingRows}
+            columns={[
+              { title: 'カテゴリ', dataIndex: 'category', key: 'category', width: 120 },
+              { title: '項目', dataIndex: 'item', key: 'item', width: 180 },
+              { title: '値', dataIndex: 'value', key: 'value', width: 220 },
+              { title: '備考', dataIndex: 'note', key: 'note' }
+            ]}
+          />
+        )
+      }
+    ],
+    []
+  );
+
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Header style={{ color: '#fff' }}>
@@ -189,7 +284,7 @@ function AppInner() {
           onPointerDown={() => setResizingSide('left')}
           style={{ width: 8, cursor: 'col-resize', background: '#f5f5f5', borderRight: '1px solid #eee' }}
         />
-        <Content style={{ padding: 16 }}>
+        <Content style={{ padding: 16, display: 'grid', gap: 16 }}>
           <Tabs
             type="editable-card"
             hideAdd
@@ -207,6 +302,12 @@ function AppInner() {
               }
             }}
           />
+          <div style={{ border: '1px solid #f0f0f0', borderRadius: 8, background: '#fff' }}>
+            <div style={{ padding: '12px 12px 0 12px' }}>
+              <Typography.Title level={5}>編集ペイン</Typography.Title>
+            </div>
+            <Tabs defaultActiveKey="logs" items={centerPaneItems} style={{ paddingInline: 12 }} />
+          </div>
         </Content>
         <div
           role="separator"
