@@ -173,14 +173,18 @@ function AppInner() {
   ];
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <Layout style={{ height: '100vh', overflow: 'hidden' }}>
       <Header style={{ color: '#fff' }}>
         <Typography.Text style={{ color: '#fff', fontSize: 18 }}>UI Preview (Spec + MSW)</Typography.Text>
       </Header>
       <Menu mode="horizontal" defaultSelectedKeys={["preview"]} items={topMenuItems} style={{ paddingInline: 12 }} />
-      <Layout>
-        <Sider width={leftSiderWidth} theme="light" style={{ borderRight: '1px solid #eee' }}>
-          <div style={{ display: 'flex', height: '100%' }}>
+      <Layout style={{ minHeight: 0, overflow: 'hidden' }}>
+        <Sider
+          width={leftSiderWidth}
+          theme="light"
+          style={{ borderRight: '1px solid #eee', overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: 0 }}
+        >
+          <div style={{ display: 'flex', height: '100%', minHeight: 0 }}>
             <div
               style={{
                 width: 52,
@@ -214,7 +218,7 @@ function AppInner() {
                 );
               })}
             </div>
-            <div style={{ flex: 1, padding: 12, overflow: 'auto' }}>
+            <div style={{ flex: 1, padding: 12, overflow: 'auto', minHeight: 0 }}>
               {leftPaneMode === 'explorer' ? (
                 <>
                   <Typography.Title level={5}>Navigation</Typography.Title>
@@ -236,7 +240,7 @@ function AppInner() {
           onPointerDown={() => setResizingSide('left')}
           style={{ width: 8, cursor: 'col-resize', background: '#f5f5f5', borderRight: '1px solid #eee' }}
         />
-        <Content style={{ padding: 16 }}>
+        <Content style={{ padding: 16, overflow: 'auto', minHeight: 0 }}>
           <Card
             size="small"
             title="編集ペイン一覧テーブル"
@@ -279,7 +283,7 @@ function AppInner() {
         <Sider
           width={rightSiderWidth}
           theme="light"
-          style={{ borderLeft: '1px solid #eee', padding: 12, overflow: 'auto' }}
+          style={{ borderLeft: '1px solid #eee', padding: 12, overflow: 'auto', minHeight: 0 }}
         >
           <div style={{ display: 'grid', gap: 12 }}>
             <AuthPanel />
