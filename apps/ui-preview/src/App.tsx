@@ -1,4 +1,4 @@
-import { Layout, Menu, Tabs, Typography } from 'antd';
+import { Card, Layout, Menu, Table, Tabs, Tag, Typography } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import { loadSpecFromPublic } from '@ui-preview/ui-renderer';
 import { NavTree } from '@/components/NavTree';
@@ -45,7 +45,7 @@ function AppInner() {
   const [rightSiderWidth, setRightSiderWidth] = useState(360);
   const [resizingSide, setResizingSide] = useState<'left' | 'right' | null>(null);
   const [leftPaneMode, setLeftPaneMode] = useState<LeftPaneMode>('explorer');
-  const { scenarios, role, pushLog } = useAppState();
+  const { scenarios, role, logs, pushLog } = useAppState();
 
   useEffect(() => {
     if (!resizingSide) return;
@@ -125,6 +125,53 @@ function AppInner() {
     [tabs]
   );
 
+  const centerPaneRows = useMemo(
+    () => [
+      ...logs.slice(0, 6).map((log: { id: string; message: string; type: 'ui' | 'api'; timestamp: string }) => ({
+        key: `log-${log.id}`,
+        category: 'ログ',
+        name: log.message,
+        detail: `${log.type.toUpperCase()} / ${log.timestamp}`
+      })),
+      ...tabs.map((tab) => ({
+        key: `record-${tab.key}`,
+        category: 'レコード',
+        name: tab.title,
+        detail: tab.spec.id
+      })),
+      ...Object.entries(scenarios).map(([name, mode]) => ({
+        key: `setting-${name}`,
+        category: '設定',
+        name,
+        detail: mode
+      }))
+    ],
+    [logs, scenarios, tabs]
+  );
+
+  const centerPaneColumns = [
+    {
+      title: '分類',
+      dataIndex: 'category',
+      key: 'category',
+      width: 120,
+      render: (value: string) => {
+        const color = value === 'ログ' ? 'blue' : value === 'レコード' ? 'purple' : 'green';
+        return <Tag color={color}>{value}</Tag>;
+      }
+    },
+    {
+      title: '項目',
+      dataIndex: 'name',
+      key: 'name'
+    },
+    {
+      title: '詳細',
+      dataIndex: 'detail',
+      key: 'detail'
+    }
+  ];
+
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Header style={{ color: '#fff' }}>
@@ -190,6 +237,20 @@ function AppInner() {
           style={{ width: 8, cursor: 'col-resize', background: '#f5f5f5', borderRight: '1px solid #eee' }}
         />
         <Content style={{ padding: 16 }}>
+          <Card
+            size="small"
+            title="編集ペイン一覧テーブル"
+            style={{ marginBottom: 16 }}
+            extra={<Typography.Text type="secondary">ログ / レコード / 設定</Typography.Text>}
+          >
+            <Table
+              size="small"
+              columns={centerPaneColumns}
+              dataSource={centerPaneRows}
+              pagination={{ pageSize: 6, hideOnSinglePage: true }}
+              locale={{ emptyText: '表示可能なデータがありません' }}
+            />
+          </Card>
           <Tabs
             type="editable-card"
             hideAdd
