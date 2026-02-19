@@ -238,7 +238,7 @@ function AppInner() {
           aria-orientation="vertical"
           aria-label="Resize navigation pane"
           onPointerDown={() => setResizingSide('left')}
-          style={{ width: 8, cursor: 'col-resize', background: '#f5f5f5', borderRight: '1px solid #eee' }}
+          style={{ width: 1, cursor: 'col-resize', background: '#eee' }}
         />
         <Content style={{ padding: 16, overflow: 'auto', minHeight: 0 }}>
           <Card
@@ -278,7 +278,7 @@ function AppInner() {
           aria-orientation="vertical"
           aria-label="Resize settings pane"
           onPointerDown={() => setResizingSide('right')}
-          style={{ width: 8, cursor: 'col-resize', background: '#f5f5f5', borderLeft: '1px solid #eee' }}
+          style={{ width: 1, cursor: 'col-resize', background: '#eee' }}
         />
         <Sider
           width={rightSiderWidth}
