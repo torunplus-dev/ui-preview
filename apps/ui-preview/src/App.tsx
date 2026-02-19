@@ -21,6 +21,15 @@ const topMenuItems = [
 
 type OpenTab = { key: string; title: string; spec: ScreenSpec };
 
+
+type LeftPaneMode = 'explorer' | 'search' | 'settings';
+
+const leftModeItems: { key: LeftPaneMode; label: string; icon: string }[] = [
+  { key: 'explorer', label: 'Explorer', icon: '📁' },
+  { key: 'search', label: 'Search', icon: '🔎' },
+  { key: 'settings', label: 'Settings', icon: '⚙️' }
+];
+
 // 実際の画面本体。AppProvider で囲まれた内側で Context を使う。
 // Next.js App Router へ移すなら、このファイル相当は基本 `use client` が必要
 // (useState/useEffect/イベントハンドラを使っているため)。
@@ -35,6 +44,7 @@ function AppInner() {
   const [leftSiderWidth, setLeftSiderWidth] = useState(260);
   const [rightSiderWidth, setRightSiderWidth] = useState(360);
   const [resizingSide, setResizingSide] = useState<'left' | 'right' | null>(null);
+  const [leftPaneMode, setLeftPaneMode] = useState<LeftPaneMode>('explorer');
   const { scenarios, role, pushLog } = useAppState();
 
   useEffect(() => {
@@ -122,9 +132,55 @@ function AppInner() {
       </Header>
       <Menu mode="horizontal" defaultSelectedKeys={["preview"]} items={topMenuItems} style={{ paddingInline: 12 }} />
       <Layout>
-        <Sider width={leftSiderWidth} theme="light" style={{ borderRight: '1px solid #eee', padding: 12 }}>
-          <Typography.Title level={5}>Navigation</Typography.Title>
-          <NavTree onOpenScreen={openScreen} />
+        <Sider width={leftSiderWidth} theme="light" style={{ borderRight: '1px solid #eee' }}>
+          <div style={{ display: 'flex', height: '100%' }}>
+            <div
+              style={{
+                width: 52,
+                borderRight: '1px solid #eee',
+                display: 'grid',
+                alignContent: 'start',
+                gap: 4,
+                padding: '8px 6px'
+              }}
+            >
+              {leftModeItems.map((item) => {
+                const selected = leftPaneMode === item.key;
+                return (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() => setLeftPaneMode(item.key)}
+                    title={item.label}
+                    style={{
+                      height: 36,
+                      border: 'none',
+                      borderRadius: 6,
+                      cursor: 'pointer',
+                      background: selected ? '#e6f4ff' : 'transparent',
+                      color: selected ? '#1677ff' : '#444',
+                      fontSize: 18
+                    }}
+                  >
+                    {item.icon}
+                  </button>
+                );
+              })}
+            </div>
+            <div style={{ flex: 1, padding: 12, overflow: 'auto' }}>
+              {leftPaneMode === 'explorer' ? (
+                <>
+                  <Typography.Title level={5}>Navigation</Typography.Title>
+                  <NavTree onOpenScreen={openScreen} />
+                </>
+              ) : (
+                <>
+                  <Typography.Title level={5}>{leftModeItems.find((item) => item.key === leftPaneMode)?.label}</Typography.Title>
+                  <Typography.Text type="secondary">この機能は準備中です。</Typography.Text>
+                </>
+              )}
+            </div>
+          </div>
         </Sider>
         <div
           role="separator"
