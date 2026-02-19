@@ -1,4 +1,4 @@
-import { Layout, Menu, Tabs, Typography } from 'antd';
+import { Card, Layout, Menu, Table, Tabs, Tag, Typography } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import { loadSpecFromPublic } from '@ui-preview/ui-renderer';
 import { NavTree } from '@/components/NavTree';
@@ -45,7 +45,7 @@ function AppInner() {
   const [rightSiderWidth, setRightSiderWidth] = useState(360);
   const [resizingSide, setResizingSide] = useState<'left' | 'right' | null>(null);
   const [leftPaneMode, setLeftPaneMode] = useState<LeftPaneMode>('explorer');
-  const { scenarios, role, pushLog } = useAppState();
+  const { scenarios, role, logs, pushLog } = useAppState();
 
   useEffect(() => {
     if (!resizingSide) return;
@@ -125,15 +125,66 @@ function AppInner() {
     [tabs]
   );
 
+  const centerPaneRows = useMemo(
+    () => [
+      ...logs.slice(0, 6).map((log: { id: string; message: string; type: 'ui' | 'api'; timestamp: string }) => ({
+        key: `log-${log.id}`,
+        category: 'ログ',
+        name: log.message,
+        detail: `${log.type.toUpperCase()} / ${log.timestamp}`
+      })),
+      ...tabs.map((tab) => ({
+        key: `record-${tab.key}`,
+        category: 'レコード',
+        name: tab.title,
+        detail: tab.spec.id
+      })),
+      ...Object.entries(scenarios).map(([name, mode]) => ({
+        key: `setting-${name}`,
+        category: '設定',
+        name,
+        detail: mode
+      }))
+    ],
+    [logs, scenarios, tabs]
+  );
+
+  const centerPaneColumns = [
+    {
+      title: '分類',
+      dataIndex: 'category',
+      key: 'category',
+      width: 120,
+      render: (value: string) => {
+        const color = value === 'ログ' ? 'blue' : value === 'レコード' ? 'purple' : 'green';
+        return <Tag color={color}>{value}</Tag>;
+      }
+    },
+    {
+      title: '項目',
+      dataIndex: 'name',
+      key: 'name'
+    },
+    {
+      title: '詳細',
+      dataIndex: 'detail',
+      key: 'detail'
+    }
+  ];
+
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <Layout style={{ height: '100vh', overflow: 'hidden' }}>
       <Header style={{ color: '#fff' }}>
         <Typography.Text style={{ color: '#fff', fontSize: 18 }}>UI Preview (Spec + MSW)</Typography.Text>
       </Header>
       <Menu mode="horizontal" defaultSelectedKeys={["preview"]} items={topMenuItems} style={{ paddingInline: 12 }} />
-      <Layout>
-        <Sider width={leftSiderWidth} theme="light" style={{ borderRight: '1px solid #eee' }}>
-          <div style={{ display: 'flex', height: '100%' }}>
+      <Layout style={{ minHeight: 0, overflow: 'hidden' }}>
+        <Sider
+          width={leftSiderWidth}
+          theme="light"
+          style={{ borderRight: '1px solid #eee', overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: 0 }}
+        >
+          <div style={{ display: 'flex', height: '100%', minHeight: 0 }}>
             <div
               style={{
                 width: 52,
@@ -167,7 +218,7 @@ function AppInner() {
                 );
               })}
             </div>
-            <div style={{ flex: 1, padding: 12, overflow: 'auto' }}>
+            <div style={{ flex: 1, padding: 12, overflow: 'auto', minHeight: 0 }}>
               {leftPaneMode === 'explorer' ? (
                 <>
                   <Typography.Title level={5}>Navigation</Typography.Title>
@@ -186,10 +237,35 @@ function AppInner() {
           role="separator"
           aria-orientation="vertical"
           aria-label="Resize navigation pane"
-          onPointerDown={() => setResizingSide('left')}
-          style={{ width: 8, cursor: 'col-resize', background: '#f5f5f5', borderRight: '1px solid #eee' }}
-        />
-        <Content style={{ padding: 16 }}>
+          style={{ width: 1, background: '#eee', position: 'relative' }}
+        >
+          <div
+            onPointerDown={() => setResizingSide('left')}
+            style={{
+              position: 'absolute',
+              top: 0,
+              bottom: 0,
+              left: -3.5,
+              width: 8,
+              cursor: 'col-resize'
+            }}
+          />
+        </div>
+        <Content style={{ padding: 16, overflow: 'auto', minHeight: 0 }}>
+          <Card
+            size="small"
+            title="編集ペイン一覧テーブル"
+            style={{ marginBottom: 16 }}
+            extra={<Typography.Text type="secondary">ログ / レコード / 設定</Typography.Text>}
+          >
+            <Table
+              size="small"
+              columns={centerPaneColumns}
+              dataSource={centerPaneRows}
+              pagination={{ pageSize: 6, hideOnSinglePage: true }}
+              locale={{ emptyText: '表示可能なデータがありません' }}
+            />
+          </Card>
           <Tabs
             type="editable-card"
             hideAdd
@@ -212,13 +288,24 @@ function AppInner() {
           role="separator"
           aria-orientation="vertical"
           aria-label="Resize settings pane"
-          onPointerDown={() => setResizingSide('right')}
-          style={{ width: 8, cursor: 'col-resize', background: '#f5f5f5', borderLeft: '1px solid #eee' }}
-        />
+          style={{ width: 1, background: '#eee', position: 'relative' }}
+        >
+          <div
+            onPointerDown={() => setResizingSide('right')}
+            style={{
+              position: 'absolute',
+              top: 0,
+              bottom: 0,
+              left: -3.5,
+              width: 8,
+              cursor: 'col-resize'
+            }}
+          />
+        </div>
         <Sider
           width={rightSiderWidth}
           theme="light"
-          style={{ borderLeft: '1px solid #eee', padding: 12, overflow: 'auto' }}
+          style={{ borderLeft: '1px solid #eee', padding: 12, overflow: 'auto', minHeight: 0 }}
         >
           <div style={{ display: 'grid', gap: 12 }}>
             <AuthPanel />
