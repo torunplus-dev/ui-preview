@@ -237,9 +237,20 @@ function AppInner() {
           role="separator"
           aria-orientation="vertical"
           aria-label="Resize navigation pane"
-          onPointerDown={() => setResizingSide('left')}
-          style={{ width: 1, cursor: 'col-resize', background: '#eee' }}
-        />
+          style={{ width: 1, background: '#eee', position: 'relative' }}
+        >
+          <div
+            onPointerDown={() => setResizingSide('left')}
+            style={{
+              position: 'absolute',
+              top: 0,
+              bottom: 0,
+              left: -3.5,
+              width: 8,
+              cursor: 'col-resize'
+            }}
+          />
+        </div>
         <Content style={{ padding: 16, overflow: 'auto', minHeight: 0 }}>
           <Card
             size="small"
@@ -277,9 +288,20 @@ function AppInner() {
           role="separator"
           aria-orientation="vertical"
           aria-label="Resize settings pane"
-          onPointerDown={() => setResizingSide('right')}
-          style={{ width: 1, cursor: 'col-resize', background: '#eee' }}
-        />
+          style={{ width: 1, background: '#eee', position: 'relative' }}
+        >
+          <div
+            onPointerDown={() => setResizingSide('right')}
+            style={{
+              position: 'absolute',
+              top: 0,
+              bottom: 0,
+              left: -3.5,
+              width: 8,
+              cursor: 'col-resize'
+            }}
+          />
+        </div>
         <Sider
           width={rightSiderWidth}
           theme="light"
