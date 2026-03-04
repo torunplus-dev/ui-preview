@@ -23,11 +23,18 @@ type OpenTab = { key: string; title: string; spec: ScreenSpec };
 
 
 type LeftPaneMode = 'explorer' | 'search' | 'settings';
+type InstanceTarget = 'instance-a' | 'instance-b' | 'instance-c';
 
 const leftModeItems: { key: LeftPaneMode; label: string; icon: string }[] = [
   { key: 'explorer', label: 'Explorer', icon: '📁' },
   { key: 'search', label: 'Search', icon: '🔎' },
   { key: 'settings', label: 'Settings', icon: '⚙️' }
+];
+
+const instanceItems: { key: InstanceTarget; label: string; icon: string; endpoint: string }[] = [
+  { key: 'instance-a', label: 'Instance A', icon: '🅰️', endpoint: 'preview-a.local' },
+  { key: 'instance-b', label: 'Instance B', icon: '🅱️', endpoint: 'preview-b.local' },
+  { key: 'instance-c', label: 'Instance C', icon: '🆂', endpoint: 'preview-c.local' }
 ];
 
 // 実際の画面本体。AppProvider で囲まれた内側で Context を使う。
@@ -45,6 +52,7 @@ function AppInner() {
   const [rightSiderWidth, setRightSiderWidth] = useState(360);
   const [resizingSide, setResizingSide] = useState<'left' | 'right' | null>(null);
   const [leftPaneMode, setLeftPaneMode] = useState<LeftPaneMode>('explorer');
+  const [activeInstance, setActiveInstance] = useState<InstanceTarget>('instance-a');
   const { scenarios, role, logs, pushLog } = useAppState();
 
   useEffect(() => {
@@ -172,6 +180,14 @@ function AppInner() {
     }
   ];
 
+  const handleSelectInstance = (instance: InstanceTarget) => {
+    setActiveInstance(instance);
+    const selected = instanceItems.find((item) => item.key === instance);
+    if (selected) {
+      pushLog({ type: 'ui', message: `switch instance ${selected.label} (${selected.endpoint})` });
+    }
+  };
+
   return (
     <Layout style={{ height: '100vh', overflow: 'hidden' }}>
       <Header style={{ color: '#fff' }}>
@@ -179,140 +195,174 @@ function AppInner() {
       </Header>
       <Menu mode="horizontal" defaultSelectedKeys={["preview"]} items={topMenuItems} style={{ paddingInline: 12 }} />
       <Layout style={{ minHeight: 0, overflow: 'hidden' }}>
-        <Sider
-          width={leftSiderWidth}
-          theme="light"
-          style={{ borderRight: '1px solid #eee', overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: 0 }}
-        >
-          <div style={{ display: 'flex', height: '100%', minHeight: 0 }}>
-            <div
-              style={{
-                width: 52,
-                borderRight: '1px solid #eee',
-                display: 'grid',
-                alignContent: 'start',
-                gap: 4,
-                padding: '8px 6px'
-              }}
-            >
-              {leftModeItems.map((item) => {
-                const selected = leftPaneMode === item.key;
-                return (
-                  <button
-                    key={item.key}
-                    type="button"
-                    onClick={() => setLeftPaneMode(item.key)}
-                    title={item.label}
-                    style={{
-                      height: 36,
-                      border: 'none',
-                      borderRadius: 6,
-                      cursor: 'pointer',
-                      background: selected ? '#e6f4ff' : 'transparent',
-                      color: selected ? '#1677ff' : '#444',
-                      fontSize: 18
-                    }}
-                  >
-                    {item.icon}
-                  </button>
-                );
-              })}
-            </div>
-            <div style={{ flex: 1, padding: 12, overflow: 'auto', minHeight: 0 }}>
-              {leftPaneMode === 'explorer' ? (
-                <>
-                  <Typography.Title level={5}>Navigation</Typography.Title>
-                  <NavTree onOpenScreen={openScreen} />
-                </>
-              ) : (
-                <>
-                  <Typography.Title level={5}>{leftModeItems.find((item) => item.key === leftPaneMode)?.label}</Typography.Title>
-                  <Typography.Text type="secondary">この機能は準備中です。</Typography.Text>
-                </>
-              )}
-            </div>
+        <Sider width={58} theme="light" style={{ borderRight: '1px solid #eee', padding: '8px 6px' }}>
+          <Typography.Text type="secondary" style={{ fontSize: 11 }}>
+            INSTANCE
+          </Typography.Text>
+          <div style={{ display: 'grid', alignContent: 'start', gap: 4, marginTop: 8 }}>
+            {instanceItems.map((item) => {
+              const selected = activeInstance === item.key;
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => handleSelectInstance(item.key)}
+                  title={`${item.label} (${item.endpoint})`}
+                  style={{
+                    height: 36,
+                    border: 'none',
+                    borderRadius: 6,
+                    cursor: 'pointer',
+                    background: selected ? '#e6f4ff' : 'transparent',
+                    color: selected ? '#1677ff' : '#444',
+                    fontSize: 18
+                  }}
+                >
+                  {item.icon}
+                </button>
+              );
+            })}
           </div>
         </Sider>
-        <div
-          role="separator"
-          aria-orientation="vertical"
-          aria-label="Resize navigation pane"
-          style={{ width: 1, background: '#eee', position: 'relative' }}
-        >
-          <div
-            onPointerDown={() => setResizingSide('left')}
-            style={{
-              position: 'absolute',
-              top: 0,
-              bottom: 0,
-              left: -3.5,
-              width: 8,
-              cursor: 'col-resize'
-            }}
-          />
-        </div>
-        <Content style={{ padding: 16, overflow: 'auto', minHeight: 0 }}>
-          <Card
-            size="small"
-            title="編集ペイン一覧テーブル"
-            style={{ marginBottom: 16 }}
-            extra={<Typography.Text type="secondary">ログ / レコード / 設定</Typography.Text>}
+        <Layout style={{ minHeight: 0, overflow: 'hidden' }}>
+          <Sider
+            width={leftSiderWidth}
+            theme="light"
+            style={{ borderRight: '1px solid #eee', overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: 0 }}
           >
-            <Table
-              size="small"
-              columns={centerPaneColumns}
-              dataSource={centerPaneRows}
-              pagination={{ pageSize: 6, hideOnSinglePage: true }}
-              locale={{ emptyText: '表示可能なデータがありません' }}
-            />
-          </Card>
-          <Tabs
-            type="editable-card"
-            hideAdd
-            activeKey={activeKey}
-            items={items}
-            onChange={setActiveKey}
-            onEdit={(targetKey, action) => {
-              // editable-card の「x」でタブ削除。
-              if (action === 'remove') {
-                const next = tabs.filter((t) => t.key !== targetKey);
-                setTabs(next);
-                if (activeKey === targetKey) {
-                  setActiveKey(next[0]?.key);
-                }
-              }
-            }}
-          />
-        </Content>
-        <div
-          role="separator"
-          aria-orientation="vertical"
-          aria-label="Resize settings pane"
-          style={{ width: 1, background: '#eee', position: 'relative' }}
-        >
+            <div style={{ display: 'flex', height: '100%', minHeight: 0 }}>
+              <div
+                style={{
+                  width: 52,
+                  borderRight: '1px solid #eee',
+                  display: 'grid',
+                  alignContent: 'start',
+                  gap: 4,
+                  padding: '8px 6px'
+                }}
+              >
+                {leftModeItems.map((item) => {
+                  const selected = leftPaneMode === item.key;
+                  return (
+                    <button
+                      key={item.key}
+                      type="button"
+                      onClick={() => setLeftPaneMode(item.key)}
+                      title={item.label}
+                      style={{
+                        height: 36,
+                        border: 'none',
+                        borderRadius: 6,
+                        cursor: 'pointer',
+                        background: selected ? '#e6f4ff' : 'transparent',
+                        color: selected ? '#1677ff' : '#444',
+                        fontSize: 18
+                      }}
+                    >
+                      {item.icon}
+                    </button>
+                  );
+                })}
+              </div>
+              <div style={{ flex: 1, padding: 12, overflow: 'auto', minHeight: 0 }}>
+                {leftPaneMode === 'explorer' ? (
+                  <>
+                    <Typography.Title level={5}>Navigation</Typography.Title>
+                    <Typography.Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>
+                      Target: {instanceItems.find((item) => item.key === activeInstance)?.endpoint}
+                    </Typography.Text>
+                    <NavTree onOpenScreen={openScreen} />
+                  </>
+                ) : (
+                  <>
+                    <Typography.Title level={5}>{leftModeItems.find((item) => item.key === leftPaneMode)?.label}</Typography.Title>
+                    <Typography.Text type="secondary">この機能は準備中です。</Typography.Text>
+                  </>
+                )}
+              </div>
+            </div>
+          </Sider>
           <div
-            onPointerDown={() => setResizingSide('right')}
-            style={{
-              position: 'absolute',
-              top: 0,
-              bottom: 0,
-              left: -3.5,
-              width: 8,
-              cursor: 'col-resize'
-            }}
-          />
-        </div>
-        <Sider
-          width={rightSiderWidth}
-          theme="light"
-          style={{ borderLeft: '1px solid #eee', padding: 12, overflow: 'auto', minHeight: 0 }}
-        >
-          <div style={{ display: 'grid', gap: 12 }}>
-            <AuthPanel />
-            <ScenarioPanel />
-            <LogPanel />
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Resize navigation pane"
+            style={{ width: 1, background: '#eee', position: 'relative' }}
+          >
+            <div
+              onPointerDown={() => setResizingSide('left')}
+              style={{
+                position: 'absolute',
+                top: 0,
+                bottom: 0,
+                left: -3.5,
+                width: 8,
+                cursor: 'col-resize'
+              }}
+            />
           </div>
-        </Sider>
+          <Content style={{ padding: 16, overflow: 'auto', minHeight: 0 }}>
+            <Card
+              size="small"
+              title="編集ペイン一覧テーブル"
+              style={{ marginBottom: 16 }}
+              extra={<Typography.Text type="secondary">ログ / レコード / 設定</Typography.Text>}
+            >
+              <Table
+                size="small"
+                columns={centerPaneColumns}
+                dataSource={centerPaneRows}
+                pagination={{ pageSize: 6, hideOnSinglePage: true }}
+                locale={{ emptyText: '表示可能なデータがありません' }}
+              />
+            </Card>
+            <Tabs
+              type="editable-card"
+              hideAdd
+              activeKey={activeKey}
+              items={items}
+              onChange={setActiveKey}
+              onEdit={(targetKey, action) => {
+                // editable-card の「x」でタブ削除。
+                if (action === 'remove') {
+                  const next = tabs.filter((t) => t.key !== targetKey);
+                  setTabs(next);
+                  if (activeKey === targetKey) {
+                    setActiveKey(next[0]?.key);
+                  }
+                }
+              }}
+            />
+          </Content>
+          <div
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Resize settings pane"
+            style={{ width: 1, background: '#eee', position: 'relative' }}
+          >
+            <div
+              onPointerDown={() => setResizingSide('right')}
+              style={{
+                position: 'absolute',
+                top: 0,
+                bottom: 0,
+                left: -3.5,
+                width: 8,
+                cursor: 'col-resize'
+              }}
+            />
+          </div>
+          <Sider
+            width={rightSiderWidth}
+            theme="light"
+            style={{ borderLeft: '1px solid #eee', padding: 12, overflow: 'auto', minHeight: 0 }}
+          >
+            <div style={{ display: 'grid', gap: 12 }}>
+              <AuthPanel />
+              <ScenarioPanel />
+              <LogPanel />
+            </div>
+          </Sider>
+        </Layout>
       </Layout>
     </Layout>
   );
