@@ -181,9 +181,9 @@ function AppInner() {
     const placeholderCount = Math.max(0, EDIT_PANE_TABLE_PAGE_SIZE - pageRows.length);
     const placeholders = Array.from({ length: placeholderCount }, (_, index) => ({
       key: `placeholder-${centerPanePage}-${index}`,
-      category: '',
-      name: '',
-      detail: '',
+      category: '\u00a0',
+      name: '\u00a0',
+      detail: '\u00a0',
       isPlaceholder: true
     }));
 
@@ -197,7 +197,7 @@ function AppInner() {
       key: 'category',
       width: 120,
       render: (value: string, record: CenterPaneRow) => {
-        if (record.isPlaceholder) return null;
+        if (record.isPlaceholder) return <span style={{ visibility: 'hidden' }}>•</span>;
         const color = value === 'ログ' ? 'blue' : value === 'レコード' ? 'purple' : 'green';
         return <Tag color={color}>{value}</Tag>;
       }
@@ -206,13 +206,13 @@ function AppInner() {
       title: '項目',
       dataIndex: 'name',
       key: 'name',
-      render: (value: string, record: CenterPaneRow) => (record.isPlaceholder ? null : value)
+      render: (value: string, record: CenterPaneRow) => (record.isPlaceholder ? <span style={{ visibility: 'hidden' }}>•</span> : value)
     },
     {
       title: '詳細',
       dataIndex: 'detail',
       key: 'detail',
-      render: (value: string, record: CenterPaneRow) => (record.isPlaceholder ? null : value)
+      render: (value: string, record: CenterPaneRow) => (record.isPlaceholder ? <span style={{ visibility: 'hidden' }}>•</span> : value)
     }
   ];
 
@@ -377,6 +377,7 @@ function AppInner() {
                   pageSize: EDIT_PANE_TABLE_PAGE_SIZE,
                   hideOnSinglePage: false,
                   showSizeChanger: false,
+                  disabled: totalCenterPanePages === 1,
                   onChange: (page) => setCenterPanePage(page)
                 }}
                 locale={{ emptyText: '表示可能なデータがありません' }}
