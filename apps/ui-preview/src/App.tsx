@@ -20,10 +20,15 @@ const topMenuItems = [
 ];
 
 const EDIT_PANE_TABLE_PAGE_SIZE = 6;
-const EDIT_PANE_TABLE_BODY_HEIGHT = 240;
 
 type OpenTab = { key: string; title: string; spec: ScreenSpec };
-
+type CenterPaneRow = {
+  key: string;
+  category: string;
+  name: string;
+  detail: string;
+  isPlaceholder?: boolean;
+};
 
 type LeftPaneMode = 'explorer' | 'search' | 'settings';
 type InstanceTarget = 'instance-a' | 'instance-b' | 'instance-c';
@@ -56,6 +61,7 @@ function AppInner() {
   const [resizingSide, setResizingSide] = useState<'left' | 'right' | null>(null);
   const [leftPaneMode, setLeftPaneMode] = useState<LeftPaneMode>('explorer');
   const [activeInstance, setActiveInstance] = useState<InstanceTarget>('instance-a');
+  const [centerPanePage, setCenterPanePage] = useState(1);
   const { scenarios, role, logs, pushLog } = useAppState();
 
   useEffect(() => {
@@ -136,7 +142,7 @@ function AppInner() {
     [tabs]
   );
 
-  const centerPaneRows = useMemo(
+  const centerPaneRows = useMemo<CenterPaneRow[]>(
     () => [
       ...logs.slice(0, 6).map((log: { id: string; message: string; type: 'ui' | 'api'; timestamp: string }) => ({
         key: `log-${log.id}`,
@@ -160,13 +166,38 @@ function AppInner() {
     [logs, scenarios, tabs]
   );
 
+
+  const totalCenterPanePages = Math.max(1, Math.ceil(centerPaneRows.length / EDIT_PANE_TABLE_PAGE_SIZE));
+
+  useEffect(() => {
+    if (centerPanePage > totalCenterPanePages) {
+      setCenterPanePage(totalCenterPanePages);
+    }
+  }, [centerPanePage, totalCenterPanePages]);
+
+  const visibleCenterPaneRows = useMemo<CenterPaneRow[]>(() => {
+    const start = (centerPanePage - 1) * EDIT_PANE_TABLE_PAGE_SIZE;
+    const pageRows = centerPaneRows.slice(start, start + EDIT_PANE_TABLE_PAGE_SIZE);
+    const placeholderCount = Math.max(0, EDIT_PANE_TABLE_PAGE_SIZE - pageRows.length);
+    const placeholders = Array.from({ length: placeholderCount }, (_, index) => ({
+      key: `placeholder-${centerPanePage}-${index}`,
+      category: '',
+      name: '',
+      detail: '',
+      isPlaceholder: true
+    }));
+
+    return [...pageRows, ...placeholders];
+  }, [centerPanePage, centerPaneRows]);
+
   const centerPaneColumns = [
     {
       title: '分類',
       dataIndex: 'category',
       key: 'category',
       width: 120,
-      render: (value: string) => {
+      render: (value: string, record: CenterPaneRow) => {
+        if (record.isPlaceholder) return null;
         const color = value === 'ログ' ? 'blue' : value === 'レコード' ? 'purple' : 'green';
         return <Tag color={color}>{value}</Tag>;
       }
@@ -174,12 +205,14 @@ function AppInner() {
     {
       title: '項目',
       dataIndex: 'name',
-      key: 'name'
+      key: 'name',
+      render: (value: string, record: CenterPaneRow) => (record.isPlaceholder ? null : value)
     },
     {
       title: '詳細',
       dataIndex: 'detail',
-      key: 'detail'
+      key: 'detail',
+      render: (value: string, record: CenterPaneRow) => (record.isPlaceholder ? null : value)
     }
   ];
 
@@ -337,9 +370,15 @@ function AppInner() {
               <Table
                 size="small"
                 columns={centerPaneColumns}
-                dataSource={centerPaneRows}
-                pagination={{ pageSize: EDIT_PANE_TABLE_PAGE_SIZE, hideOnSinglePage: true }}
-                scroll={{ y: EDIT_PANE_TABLE_BODY_HEIGHT }}
+                dataSource={visibleCenterPaneRows}
+                pagination={{
+                  current: centerPanePage,
+                  total: centerPaneRows.length,
+                  pageSize: EDIT_PANE_TABLE_PAGE_SIZE,
+                  hideOnSinglePage: false,
+                  showSizeChanger: false,
+                  onChange: (page) => setCenterPanePage(page)
+                }}
                 locale={{ emptyText: '表示可能なデータがありません' }}
               />
             </Card>
