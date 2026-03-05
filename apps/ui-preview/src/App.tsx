@@ -19,6 +19,9 @@ const topMenuItems = [
   { key: 'mock', label: 'Mock' }
 ];
 
+const EDIT_PANE_TABLE_PAGE_SIZE = 6;
+const EDIT_PANE_TABLE_BODY_HEIGHT = 240;
+
 type OpenTab = { key: string; title: string; spec: ScreenSpec };
 
 
@@ -335,7 +338,8 @@ function AppInner() {
                 size="small"
                 columns={centerPaneColumns}
                 dataSource={centerPaneRows}
-                pagination={{ pageSize: 6, hideOnSinglePage: true }}
+                pagination={{ pageSize: EDIT_PANE_TABLE_PAGE_SIZE, hideOnSinglePage: true }}
+                scroll={{ y: EDIT_PANE_TABLE_BODY_HEIGHT }}
                 locale={{ emptyText: '表示可能なデータがありません' }}
               />
             </Card>
