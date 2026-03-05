@@ -180,6 +180,33 @@ function AppInner() {
     }
   ];
 
+  const supplementalColumns = [
+    {
+      title: 'コントロール名',
+      dataIndex: 'controlName',
+      key: 'controlName'
+    },
+    {
+      title: 'タイプ',
+      dataIndex: 'type',
+      key: 'type',
+      width: 140
+    },
+    {
+      title: '状態',
+      dataIndex: 'status',
+      key: 'status',
+      width: 160,
+      render: (value: string) => <Tag color={value === '有効' ? 'green' : 'default'}>{value}</Tag>
+    }
+  ];
+
+  const supplementalRows = [
+    { key: 'ctrl-filter', controlName: 'フィルターパネル', type: 'フォーム', status: '有効' },
+    { key: 'ctrl-export', controlName: 'CSVエクスポート', type: 'アクション', status: '有効' },
+    { key: 'ctrl-bulk', controlName: '一括更新', type: 'バッチ', status: '準備中' }
+  ];
+
   const handleSelectInstance = (instance: InstanceTarget) => {
     setActiveInstance(instance);
     const selected = instanceItems.find((item) => item.key === instance);
@@ -310,6 +337,19 @@ function AppInner() {
                 dataSource={centerPaneRows}
                 pagination={{ pageSize: 6, hideOnSinglePage: true }}
                 locale={{ emptyText: '表示可能なデータがありません' }}
+              />
+            </Card>
+            <Card
+              size="small"
+              title="補助テーブルコントロール"
+              style={{ marginBottom: 16 }}
+              extra={<Typography.Text type="secondary">編集ペイン一覧テーブルの下に表示</Typography.Text>}
+            >
+              <Table
+                size="small"
+                columns={supplementalColumns}
+                dataSource={supplementalRows}
+                pagination={false}
               />
             </Card>
             <Tabs
