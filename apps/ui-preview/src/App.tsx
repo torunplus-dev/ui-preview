@@ -196,10 +196,7 @@ function AppInner() {
       <Menu mode="horizontal" defaultSelectedKeys={["preview"]} items={topMenuItems} style={{ paddingInline: 12 }} />
       <Layout style={{ minHeight: 0, overflow: 'hidden' }}>
         <Sider width={58} theme="light" style={{ borderRight: '1px solid #eee', padding: '8px 6px' }}>
-          <Typography.Text type="secondary" style={{ fontSize: 11 }}>
-            INSTANCE
-          </Typography.Text>
-          <div style={{ display: 'grid', alignContent: 'start', gap: 4, marginTop: 8 }}>
+          <div style={{ display: 'grid', alignContent: 'start', gap: 4 }}>
             {instanceItems.map((item) => {
               const selected = activeInstance === item.key;
               return (
