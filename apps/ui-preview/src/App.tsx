@@ -1,4 +1,5 @@
 import { Card, Layout, Menu, Table, Tabs, Tag, Typography } from 'antd';
+import './App.css';
 import { useEffect, useMemo, useState } from 'react';
 import { loadSpecFromPublic } from '@ui-preview/ui-renderer';
 import { NavTree } from '@/components/NavTree';
@@ -335,6 +336,7 @@ function AppInner() {
             >
               <Table
                 size="small"
+                className="edit-pane-list-table"
                 columns={centerPaneColumns}
                 dataSource={centerPaneRows}
                 pagination={{
