@@ -1,4 +1,5 @@
 import { Card, Layout, Menu, Table, Tabs, Tag, Typography } from 'antd';
+import './App.css';
 import { useEffect, useMemo, useState } from 'react';
 import { loadSpecFromPublic } from '@ui-preview/ui-renderer';
 import { NavTree } from '@/components/NavTree';
@@ -20,10 +21,9 @@ const topMenuItems = [
 ];
 
 const EDIT_PANE_TABLE_PAGE_SIZE = 6;
-const EDIT_PANE_TABLE_BODY_HEIGHT = 240;
+const EDIT_PANE_TABLE_SCROLL_HEIGHT = 240;
 
 type OpenTab = { key: string; title: string; spec: ScreenSpec };
-
 
 type LeftPaneMode = 'explorer' | 'search' | 'settings';
 type InstanceTarget = 'instance-a' | 'instance-b' | 'instance-c';
@@ -336,10 +336,16 @@ function AppInner() {
             >
               <Table
                 size="small"
+                className="edit-pane-list-table"
                 columns={centerPaneColumns}
                 dataSource={centerPaneRows}
-                pagination={{ pageSize: EDIT_PANE_TABLE_PAGE_SIZE, hideOnSinglePage: true }}
-                scroll={{ y: EDIT_PANE_TABLE_BODY_HEIGHT }}
+                pagination={{
+                  pageSize: EDIT_PANE_TABLE_PAGE_SIZE,
+                  hideOnSinglePage: false,
+                  showSizeChanger: false,
+                  disabled: centerPaneRows.length <= EDIT_PANE_TABLE_PAGE_SIZE
+                }}
+                scroll={{ y: EDIT_PANE_TABLE_SCROLL_HEIGHT }}
                 locale={{ emptyText: '表示可能なデータがありません' }}
               />
             </Card>
